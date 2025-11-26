@@ -8,6 +8,10 @@ const selectedUnitLabel = document.getElementById("selected-unit");
 const startButton = document.getElementById("start-button");
 const unitPanel = document.querySelector(".unit-grid");
 const logList = document.getElementById("event-log");
+const slimeButton = document.getElementById("slime-button");
+const sneezeButton = document.getElementById("sneeze-button");
+const slimeStatusLabel = slimeButton?.querySelector(".ability-status") ?? null;
+const sneezeStatusLabel = sneezeButton?.querySelector(".ability-status") ?? null;
 
 const immuneCatalog = {
   macrophage: {
@@ -65,6 +69,18 @@ const virusCatalog = {
   },
 };
 
+const fieldAbilities = {
+  slime: {
+    duration: 4,
+    cooldown: 12,
+    slowMultiplier: 0.35,
+  },
+  sneeze: {
+    cooldown: 18,
+    pushDistance: 140,
+  },
+};
+
 const waves = [
   {
     name: "Drip Scouts",
@@ -102,6 +118,11 @@ const state = {
   spawnTimer: 0,
   lastTimestamp: 0,
   logHistory: [],
+  abilityStatus: {
+    slimeActive: 0,
+    slimeCooldown: 0,
+    sneezeCooldown: 0,
+  },
 };
 
 function resetState() {
@@ -117,8 +138,12 @@ function resetState() {
   state.spawnTimer = 0;
   state.lastTimestamp = performance.now();
   state.logHistory = [];
+  state.abilityStatus.slimeActive = 0;
+  state.abilityStatus.slimeCooldown = 0;
+  state.abilityStatus.sneezeCooldown = 0;
   logEvent("Scenario online: Runny Nose infiltration detected.");
   startButton.disabled = true;
+  updateAbilityButtons();
 }
 
 function selectUnit(unitId) {
@@ -190,6 +215,80 @@ function updateHUD() {
   infectionValue.textContent = `${Math.min(state.infection, 100).toFixed(0)}%`;
 }
 
+function formatAbilityTimer(value) {
+  return value <= 0 ? "Ready" : `${value.toFixed(1)}s`;
+}
+
+function updateAbilityButtons() {
+  if (slimeButton) {
+    const cooldown = state.abilityStatus.slimeCooldown;
+    const isActive = state.abilityStatus.slimeActive > 0;
+    const ready = state.running && cooldown <= 0 && !isActive;
+    slimeButton.disabled = !ready;
+    if (slimeStatusLabel) {
+      if (!state.running) {
+        slimeStatusLabel.textContent = "Awaiting start";
+      } else if (isActive) {
+        slimeStatusLabel.textContent = "Active";
+      } else {
+        slimeStatusLabel.textContent = formatAbilityTimer(cooldown);
+      }
+    }
+    slimeButton.classList.toggle("ability-active", isActive);
+  }
+
+  if (sneezeButton) {
+    const cooldown = state.abilityStatus.sneezeCooldown;
+    const ready = state.running && cooldown <= 0;
+    sneezeButton.disabled = !ready;
+    if (sneezeStatusLabel) {
+      if (!state.running) {
+        sneezeStatusLabel.textContent = "Awaiting start";
+      } else {
+        sneezeStatusLabel.textContent = formatAbilityTimer(cooldown);
+      }
+    }
+  }
+}
+
+function ensureScenarioRunning() {
+  if (state.running) {
+    return true;
+  }
+  logEvent("Start the level to trigger field events.");
+  return false;
+}
+
+function activateSlime() {
+  if (!ensureScenarioRunning()) {
+    return;
+  }
+  if (state.abilityStatus.slimeCooldown > 0 || state.abilityStatus.slimeActive > 0) {
+    logEvent("Slime flood is still recharging.");
+    return;
+  }
+  state.abilityStatus.slimeActive = fieldAbilities.slime.duration;
+  state.abilityStatus.slimeCooldown = fieldAbilities.slime.cooldown;
+  logEvent("Slime flood deployed. Viruses slowed by sticky mucus.");
+  updateAbilityButtons();
+}
+
+function activateSneeze() {
+  if (!ensureScenarioRunning()) {
+    return;
+  }
+  if (state.abilityStatus.sneezeCooldown > 0) {
+    logEvent("Sneeze reflex is recovering.");
+    return;
+  }
+  state.abilityStatus.sneezeCooldown = fieldAbilities.sneeze.cooldown;
+  state.virusUnits.forEach((virus) => {
+    virus.x = Math.min(canvas.width - 40, virus.x + fieldAbilities.sneeze.pushDistance);
+  });
+  logEvent("Reflex sneeze blasts enemy cells backward!");
+  updateAbilityButtons();
+}
+
 function handleCombat(delta) {
   state.immuneUnits.forEach((unit) => {
     unit.cooldown = Math.max(0, unit.cooldown - delta);
@@ -246,6 +345,8 @@ function handleCombat(delta) {
     return true;
   });
 
+  const slimeSlowFactor =
+    state.abilityStatus.slimeActive > 0 ? fieldAbilities.slime.slowMultiplier : 1;
   state.virusUnits.forEach((virus) => {
     const blocker = state.immuneUnits.find(
       (unit) => Math.hypot(virus.x - unit.x, virus.y - unit.y) < 25
@@ -255,7 +356,7 @@ function handleCombat(delta) {
       virus.hp -= blocker.damage * delta * 0.5;
       return;
     }
-    virus.x -= virus.speed * delta;
+    virus.x -= virus.speed * slimeSlowFactor * delta;
     if (virus.x <= 35) {
       state.tissueHealth -= virus.damage * 0.8;
       state.infection += virus.damage * 0.5;
@@ -282,6 +383,18 @@ function updateLevel(delta) {
   state.infection += state.virusUnits.length * state.infectionRate * delta;
   state.tissueHealth = Math.min(Math.max(state.tissueHealth, 0), 100);
   state.infection = Math.min(Math.max(state.infection, 0), 100);
+  state.abilityStatus.slimeCooldown = Math.max(
+    0,
+    state.abilityStatus.slimeCooldown - delta
+  );
+  state.abilityStatus.sneezeCooldown = Math.max(
+    0,
+    state.abilityStatus.sneezeCooldown - delta
+  );
+  state.abilityStatus.slimeActive = Math.max(
+    0,
+    state.abilityStatus.slimeActive - delta
+  );
 
   const wave = waves[state.waveIndex];
   if (wave) {
@@ -322,6 +435,13 @@ function drawField() {
   ctx.fillStyle = "rgba(0,255,204,0.08)";
   ctx.fillRect(0, 0, canvas.width / 2.4, canvas.height);
   ctx.restore();
+
+  if (state.abilityStatus.slimeActive > 0) {
+    const strength = state.abilityStatus.slimeActive / fieldAbilities.slime.duration;
+    const alpha = 0.12 + 0.18 * strength;
+    ctx.fillStyle = `rgba(102, 255, 204, ${alpha})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
   state.immuneUnits.forEach((unit) => {
     ctx.fillStyle = unit.color;
@@ -379,6 +499,7 @@ function gameLoop(timestamp) {
   cleanupUnits();
   updateLevel(delta);
   updateHUD();
+  updateAbilityButtons();
   drawField();
 
   requestAnimationFrame(gameLoop);
@@ -404,7 +525,16 @@ startButton.addEventListener("click", () => {
   }
 });
 
+if (slimeButton) {
+  slimeButton.addEventListener("click", activateSlime);
+}
+
+if (sneezeButton) {
+  sneezeButton.addEventListener("click", activateSneeze);
+}
+
 selectUnit("macrophage");
 updateHUD();
+updateAbilityButtons();
 logEvent("Welcome Commander. Press Start to begin.");
 requestAnimationFrame(gameLoop);
