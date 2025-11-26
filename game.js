@@ -4,14 +4,18 @@ const ctx = canvas.getContext("2d");
 const massValue = document.getElementById("mass-value");
 const healthValue = document.getElementById("health-value");
 const infectionValue = document.getElementById("infection-value");
-const selectedUnitLabel = document.getElementById("selected-unit");
-const startButton = document.getElementById("start-button");
 const startPanel = document.getElementById("start-panel");
 const gameShell = document.getElementById("game-shell");
 const unitPanel = document.querySelector(".unit-grid");
 const logList = document.getElementById("event-log");
 const slimeButton = document.getElementById("slime-button");
 const sneezeButton = document.getElementById("sneeze-button");
+const levelButtons = document.querySelectorAll("[data-level-trigger]");
+const outcomePanel = document.getElementById("outcome-panel");
+const outcomeTitle = document.getElementById("outcome-title");
+const outcomeMessage = document.getElementById("outcome-message");
+const retryButton = document.getElementById("retry-button");
+const levelSelectButton = document.getElementById("level-select-button");
 const slimeStatusLabel = slimeButton?.querySelector(".ability-status") ?? null;
 const sneezeStatusLabel = sneezeButton?.querySelector(".ability-status") ?? null;
 
@@ -69,6 +73,20 @@ const virusCatalog = {
     damage: 10,
     color: "#9acd32",
   },
+  influenza: {
+    name: "Influenza A",
+    hp: 80,
+    speed: 32,
+    damage: 16,
+    color: "#ff8c42",
+  },
+  stormcell: {
+    name: "Storm Cell",
+    hp: 135,
+    speed: 20,
+    damage: 22,
+    color: "#ff3d6e",
+  },
 };
 
 const fieldAbilities = {
@@ -83,7 +101,7 @@ const fieldAbilities = {
   },
 };
 
-const waves = [
+const rhinovirusWaves = [
   {
     name: "Drip Scouts",
     duration: 16,
@@ -104,6 +122,65 @@ const waves = [
   },
 ];
 
+const influenzaWaves = [
+  {
+    name: "Drifting Droplets",
+    duration: 18,
+    spawnInterval: 1.4,
+    mix: () => (Math.random() < 0.7 ? "influenza" : "rhinovirus"),
+  },
+  {
+    name: "Fever Pitch",
+    duration: 22,
+    spawnInterval: 1.1,
+    mix: () => (Math.random() < 0.55 ? "influenza" : "stormcell"),
+  },
+  {
+    name: "Cytokine Crash",
+    duration: 28,
+    spawnInterval: 1.3,
+    mix: () => (Math.random() < 0.45 ? "stormcell" : "influenza"),
+  },
+];
+
+const levelConfigs = {
+  rhinovirus: {
+    id: "rhinovirus",
+    label: "Runny Nose Defense",
+    introLog: "Scenario online: Runny Nose infiltration detected.",
+    victoryLog: "Rhinovirus suppressed. Nasal tissue stabilizing.",
+    defeatLog: "Health fully depleted. Mission failed.",
+    successTitle: "Runny Nose Secured",
+    successMessage: "The nasal wall is calm again. Prepare for new pathogens.",
+    failureTitle: "Runny Nose Overrun",
+    failureMessage: "Viruses broke through the nasal defenses. Recalibrate and retry.",
+    startMass: 50,
+    startInfection: 5,
+    passiveGain: 5,
+    infectionRate: 0.25,
+    waves: rhinovirusWaves,
+  },
+  influenza: {
+    id: "influenza",
+    label: "Influenza Storm",
+    introLog: "High alert: Influenza strain breaching airway tissue.",
+    victoryLog: "Influenza particles neutralized. Airways decompress.",
+    defeatLog: "Influenza ruptured tissue barriers. Mission failed.",
+    successTitle: "Influenza Held Back",
+    successMessage: "The viral storm breaks and the airway steadies.",
+    failureTitle: "Influenza Storm Lost",
+    failureMessage: "The surge overwhelmed our line. Regroup and strike again.",
+    startMass: 70,
+    startInfection: 12,
+    passiveGain: 6,
+    infectionRate: 0.32,
+    waves: influenzaWaves,
+  },
+};
+
+const DEPLOYMENT_MIN_X = 30;
+const DEPLOYMENT_MAX_RATIO = 0.45;
+const DEPLOYMENT_MIN_Y = 5;
 const state = {
   running: false,
   immuneUnits: [],
@@ -120,6 +197,7 @@ const state = {
   spawnTimer: 0,
   lastTimestamp: 0,
   logHistory: [],
+  currentLevelId: null,
   abilityStatus: {
     slimeActive: 0,
     slimeCooldown: 0,
@@ -127,14 +205,79 @@ const state = {
   },
 };
 
-function resetState() {
+function getCurrentLevel() {
+  if (!state.currentLevelId) {
+    return null;
+  }
+  return levelConfigs[state.currentLevelId] ?? null;
+}
+
+function setStartButtonsDisabled(disabled) {
+  levelButtons.forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
+function hideOutcomePanel() {
+  if (!outcomePanel) {
+    return;
+  }
+  outcomePanel.dataset.visible = "false";
+  delete outcomePanel.dataset.mode;
+}
+
+function showOutcomePanel(mode, title, message) {
+  if (!outcomePanel) {
+    return;
+  }
+  outcomePanel.dataset.visible = "true";
+  outcomePanel.dataset.mode = mode;
+  if (outcomeTitle) {
+    outcomeTitle.textContent = title;
+  }
+  if (outcomeMessage) {
+    outcomeMessage.textContent = message;
+  }
+}
+
+function handleVictory(level) {
+  if (!state.running) {
+    return;
+  }
+  state.running = false;
+  logEvent(level.victoryLog);
+  setStartButtonsDisabled(false);
+  showOutcomePanel("success", level.successTitle, level.successMessage);
+  updateAbilityButtons();
+}
+
+function handleDefeat(level) {
+  if (!state.running) {
+    return;
+  }
+  state.running = false;
+  logEvent(level.defeatLog);
+  setStartButtonsDisabled(false);
+  showOutcomePanel("failure", level.failureTitle, level.failureMessage);
+  updateAbilityButtons();
+}
+
+function resetState(levelId) {
+  const level = levelConfigs[levelId];
+  if (!level) {
+    logEvent("Unable to load scenario directives.");
+    return;
+  }
+  state.currentLevelId = levelId;
   state.running = true;
   state.immuneUnits = [];
   state.virusUnits = [];
   state.projectiles = [];
-  state.cellularMass = 50;
+  state.cellularMass = level.startMass ?? 50;
   state.tissueHealth = 100;
-  state.infection = 5;
+  state.infection = level.startInfection ?? 5;
+  state.passiveGain = level.passiveGain ?? 5;
+  state.infectionRate = level.infectionRate ?? 0.25;
   state.waveIndex = 0;
   state.waveTimer = 0;
   state.spawnTimer = 0;
@@ -143,9 +286,11 @@ function resetState() {
   state.abilityStatus.slimeActive = 0;
   state.abilityStatus.slimeCooldown = 0;
   state.abilityStatus.sneezeCooldown = 0;
-  logEvent("Scenario online: Runny Nose infiltration detected.");
-  startButton.disabled = true;
+  hideOutcomePanel();
+  logEvent(level.introLog);
+  setStartButtonsDisabled(true);
   updateAbilityButtons();
+  updateHUD();
 }
 
 function revealGameShell() {
@@ -155,12 +300,24 @@ function revealGameShell() {
   startPanel?.setAttribute("data-armed", "true");
 }
 
+function startLevel(levelId) {
+  if (!levelConfigs[levelId]) {
+    logEvent("Scenario unavailable.");
+    return;
+  }
+  if (state.running) {
+    logEvent("Mission already underway.");
+    return;
+  }
+  revealGameShell();
+  resetState(levelId);
+}
+
 function selectUnit(unitId) {
   if (!immuneCatalog[unitId]) {
     return;
   }
   state.selectedUnit = unitId;
-  selectedUnitLabel.textContent = immuneCatalog[unitId].name;
   document.querySelectorAll(".unit-card").forEach((btn) =>
     btn.toggleAttribute("selected", btn.dataset.unit === unitId)
   );
@@ -182,10 +339,19 @@ function deployUnit(position) {
     return;
   }
   state.cellularMass -= blueprint.cost;
+  const maxDeployX = canvas.width * DEPLOYMENT_MAX_RATIO;
+  const clampedX = Math.min(
+    Math.max(position.x, DEPLOYMENT_MIN_X),
+    maxDeployX
+  );
+  const clampedY = Math.min(
+    Math.max(position.y, DEPLOYMENT_MIN_Y),
+    canvas.height - DEPLOYMENT_MIN_Y
+  );
   const unit = {
     ...blueprint,
-    x: Math.min(Math.max(position.x, 40), canvas.width / 2),
-    y: Math.min(Math.max(position.y, 20), canvas.height - 20),
+    x: clampedX,
+    y: clampedY,
     hp: blueprint.hp,
     cooldown: 0,
   };
@@ -195,6 +361,9 @@ function deployUnit(position) {
 
 function spawnVirus(typeId) {
   const blueprint = virusCatalog[typeId];
+  if (!blueprint) {
+    return;
+  }
   const entity = {
     ...blueprint,
     type: typeId,
@@ -426,12 +595,16 @@ function updateLevel(delta) {
   if (!state.running) {
     return;
   }
+  const level = getCurrentLevel();
+  if (!level) {
+    return;
+  }
   state.cellularMass += state.passiveGain * delta;
   state.infection += state.virusUnits.length * state.infectionRate * delta;
   state.tissueHealth = Math.min(Math.max(state.tissueHealth, 0), 100);
   state.infection = Math.min(Math.max(state.infection, 0), 100);
 
-  const wave = waves[state.waveIndex];
+  const wave = level.waves?.[state.waveIndex];
   if (wave) {
     state.waveTimer += delta;
     state.spawnTimer -= delta;
@@ -446,15 +619,12 @@ function updateLevel(delta) {
       state.spawnTimer = 1.5;
     }
   } else if (state.virusUnits.length === 0) {
-    logEvent("Rhinovirus suppressed. Nasal tissue stabilizing.");
-    state.running = false;
-    startButton.disabled = false;
+    handleVictory(level);
+    return;
   }
 
   if (state.tissueHealth <= 0) {
-    logEvent("Health fully depleted. Mission failed.");
-    state.running = false;
-    startButton.disabled = false;
+    handleDefeat(level);
   }
 }
 
@@ -549,18 +719,34 @@ canvas.addEventListener("click", (event) => {
   deployUnit({ x, y });
 });
 
-unitPanel.addEventListener("click", (event) => {
+unitPanel?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-unit]");
   if (button) {
     selectUnit(button.dataset.unit);
   }
 });
 
-startButton.addEventListener("click", () => {
-  if (!state.running) {
-    revealGameShell();
-    resetState();
+levelButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const levelId = button.dataset.levelTrigger;
+    if (levelId) {
+      startLevel(levelId);
+    }
+  });
+});
+
+retryButton?.addEventListener("click", () => {
+  if (state.currentLevelId) {
+    startLevel(state.currentLevelId);
+  } else {
+    hideOutcomePanel();
   }
+});
+
+levelSelectButton?.addEventListener("click", () => {
+  hideOutcomePanel();
+  setStartButtonsDisabled(false);
+  startPanel?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 if (slimeButton) {
@@ -574,5 +760,5 @@ if (sneezeButton) {
 selectUnit("macrophage");
 updateHUD();
 updateAbilityButtons();
-logEvent("Welcome Commander. Press Start to begin.");
+logEvent("Welcome Commander. Choose a scenario to begin.");
 requestAnimationFrame(gameLoop);
