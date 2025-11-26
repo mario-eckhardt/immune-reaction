@@ -9,9 +9,9 @@ This repository hosts a prototype for a browser-based real-time strategy game wh
 - **Scenario-Driven Levels**: Each infection presents unique enemy compositions and win conditions.
 
 ## Level 1: Runny Nose
-- **Objective**: Prevent the Rhinovirus swarm from overwhelming the nasal tissue before the infection meter fills up.
+- **Objective**: Prevent the Rhinovirus swarm from overwhelming the nasal tissue.
 - **Enemy Waves**: Trickle of Rhinovirus particles backed by mucus clumps that block shots.
-- **Victory**: Survive all pathogen waves; **Defeat**: Infection meter reaches 100% or pathogens breach the tissue line.
+- **Victory**: Survive all pathogen waves; **Defeat**: Pathogens breach the tissue line and drain the host's health.
 
 ## Immune Units (Prototype)
 | Unit | Cost (Cellular Mass) | Role |
@@ -24,7 +24,7 @@ This repository hosts a prototype for a browser-based real-time strategy game wh
 1. Open `index.html` in any modern desktop browser.
 2. Click **Start Runny Nose** to initialize the scenario.
 3. Spend cellular mass to deploy immune units near the left side of the battlefield.
-4. Keep an eye on the infection meter and nasal tissue health bar.
+4. Keep an eye on the nasal tissue health bar.
 
 ## Roadmap Ideas
 - Additional immune abilities (e.g., fever boost, antibody spray).
