@@ -95,7 +95,7 @@ h1 {
 
 .unit-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.65rem;
 }
 
@@ -250,6 +250,7 @@ h1 {
   overflow-x: auto;
   scrollbar-width: thin;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .metrics-bar::-webkit-scrollbar {
