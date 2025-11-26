@@ -29,24 +29,6 @@ const OutcomeAction = {
   RESTART: "restart",
 };
 
-const INFLUENZA_UNLOCK_KEY = "immune-response::influenzaUnlocked";
-
-function readInfluenzaUnlock() {
-  try {
-    return localStorage.getItem(INFLUENZA_UNLOCK_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-function persistInfluenzaUnlock(value) {
-  try {
-    localStorage.setItem(INFLUENZA_UNLOCK_KEY, value ? "true" : "false");
-  } catch {
-    // Ignore storage failures (e.g., privacy mode).
-  }
-}
-
 const immuneCatalog = {
   macrophage: {
     id: "macrophage",
@@ -242,7 +224,7 @@ const state = {
     slimeCooldown: 0,
     sneezeCooldown: 0,
   },
-  influenzaUnlocked: readInfluenzaUnlock(),
+  influenzaUnlocked: false,
 };
 
 function getCurrentLevel() {
@@ -378,6 +360,10 @@ function startLevel(levelId) {
     logEvent("Scenario unavailable.");
     return;
   }
+  if (levelId === "influenza" && !state.influenzaUnlocked) {
+    logEvent("Win the Runny Nose defense to unlock Influenza Storm.");
+    return;
+  }
   if (state.running) {
     logEvent("Mission already underway.");
     return;
@@ -481,7 +467,6 @@ function unlockInfluenzaScenario(levelId) {
     return;
   }
   state.influenzaUnlocked = true;
-  persistInfluenzaUnlock(true);
   syncLevelUnlocks();
   logEvent("Advanced directive unlocked: Influenza Storm now available.");
 }
