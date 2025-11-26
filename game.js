@@ -416,8 +416,8 @@ function updateLevel(delta) {
     startButton.disabled = false;
   }
 
-  if (state.tissueHealth <= 0 || state.infection >= 100) {
-    logEvent("Infection overwhelms the tissue. Mission failed.");
+  if (state.tissueHealth <= 0) {
+    logEvent("Health fully depleted. Mission failed.");
     state.running = false;
     startButton.disabled = false;
   }
