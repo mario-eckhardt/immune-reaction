@@ -470,6 +470,10 @@ function setGameStage(stage) {
   if (appHeader) {
     appHeader.hidden = !showIntro;
   }
+  if (gameShell) {
+    const showGameShell = stage === GameStages.PLAYING;
+    gameShell.dataset.visible = showGameShell ? "true" : "false";
+  }
 }
 
 function unlockInfluenzaScenario(levelId) {
