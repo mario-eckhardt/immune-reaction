@@ -1,1 +1,33 @@
-This repository hosts a real-time strategy game inspired by the human immune response.
+# Immune RTS Prototype
+
+This repository hosts a prototype for a browser-based real-time strategy game where the human immune system mobilizes against invading pathogens. The first playable scenario simulates a common cold, focusing on the battle between immune defenders and the rhinovirus causing a runny nose.
+
+## Gameplay Pillars
+- **Two Factions**: Command innate and adaptive immune cells against waves of incoming viruses.
+- **Resource Management**: Spend accumulating cellular mass to recruit units and trigger abilities.
+- **Tactical Positioning**: Drop immune cells onto the tissue battlefield to intercept pathogens before they weaken the host.
+- **Scenario-Driven Levels**: Each infection presents unique enemy compositions and win conditions.
+
+## Level 1: Runny Nose
+- **Objective**: Prevent the Rhinovirus swarm from overwhelming the nasal tissue before the infection meter fills up.
+- **Enemy Waves**: Trickle of Rhinovirus particles backed by mucus clumps that block shots.
+- **Victory**: Survive all pathogen waves; **Defeat**: Infection meter reaches 100% or pathogens breach the tissue line.
+
+## Immune Units (Prototype)
+| Unit | Cost (Cellular Mass) | Role |
+| --- | --- | --- |
+| Macrophage | 30 | Slow melee bruiser that soaks damage and clears mucus.
+| Neutrophil | 45 | Fast striker that charges viruses, great for burst damage.
+| T Cell | 60 | Ranged specialist that fires antigen bolts from a distance.
+
+## Getting Started
+1. Open `index.html` in any modern desktop browser.
+2. Click **Start Runny Nose** to initialize the scenario.
+3. Spend cellular mass to deploy immune units near the left side of the battlefield.
+4. Keep an eye on the infection meter and nasal tissue health bar.
+
+## Roadmap Ideas
+- Additional immune abilities (e.g., fever boost, antibody spray).
+- Progressive campaign of escalating infections.
+- Tech tree for unlocking advanced cells and upgrades.
+- Audio/visual polish and accessibility tweaks.
