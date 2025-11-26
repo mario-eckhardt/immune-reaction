@@ -36,7 +36,6 @@
       <section id="game-shell" data-visible="false">
         <div class="battle-column">
           <section class="battlefield-wrapper">
-            <canvas id="battlefield" width="960" height="420"></canvas>
             <section class="metrics-bar" aria-label="Battle metrics">
               <div class="stat">
                 Cellular Mass:
@@ -51,12 +50,15 @@
                 <span id="infection-value">0%</span>
               </div>
             </section>
+            <canvas id="battlefield" width="960" height="420"></canvas>
           </section>
         </div>
 
         <section class="support-panels">
-          <div class="unit-panel">
-            <h2>Immune Units</h2>
+          <section
+            class="unit-panel tactics-panel"
+            aria-label="Immune units and field events"
+          >
             <div class="unit-grid">
               <button class="unit-card" data-unit="macrophage">
                 <div class="unit-card-heading">
@@ -80,10 +82,6 @@
                 <p>Ranged unit firing antigen bolts.</p>
               </button>
             </div>
-          </div>
-
-          <section class="ability-panel">
-            <h3>Field Events</h3>
             <div class="ability-grid">
               <button id="slime-button" class="ability-card" type="button">
                 <div class="ability-heading">
