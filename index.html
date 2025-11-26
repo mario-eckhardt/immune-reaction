@@ -14,84 +14,113 @@
       </header>
 
       <section id="start-panel" class="start-panel">
-        <p>Brief the immune system and begin when ready.</p>
-        <button id="start-button" class="primary">Start Runny Nose</button>
+        <p>Brief the immune system, pick a scenario, and press forward.</p>
+        <div class="level-grid">
+          <article class="level-card">
+            <div>
+              <h3>Runny Nose Defense</h3>
+              <p>Deploy immune cells to halt the rhinovirus causing a runny nose.</p>
+            </div>
+            <button class="primary" data-level-trigger="rhinovirus">Start Runny Nose</button>
+          </article>
+          <article class="level-card">
+            <div>
+              <h3>Influenza Storm</h3>
+              <p>Weather a ferocious influenza strain pushing deeper into lung tissue.</p>
+            </div>
+            <button class="primary" data-level-trigger="influenza">Start Influenza</button>
+          </article>
+        </div>
       </section>
 
       <section id="game-shell" data-visible="false">
-        <div class="game-grid">
-          <section class="unit-panel">
+        <div class="battle-column">
+          <section class="metrics-bar" aria-label="Battle metrics">
+            <div class="stat">
+              Cellular Mass:
+              <span id="mass-value">0</span>
+            </div>
+            <div class="stat">
+              Health:
+              <span id="health-value">100%</span>
+            </div>
+            <div class="stat">
+              Infection Meter:
+              <span id="infection-value">0%</span>
+            </div>
+          </section>
+
+          <section class="battlefield-wrapper">
+            <canvas id="battlefield" width="960" height="420"></canvas>
+          </section>
+
+          <section class="log-panel">
+            <h2>Immune Log</h2>
+            <ul id="event-log"></ul>
+          </section>
+        </div>
+
+        <section class="support-panels">
+          <div class="unit-panel">
             <h2>Immune Units</h2>
             <div class="unit-grid">
               <button class="unit-card" data-unit="macrophage">
-                <strong>Macrophage</strong>
-                <span>Cost: 30</span>
+                <div class="unit-card-heading">
+                  <strong>Macrophage</strong>
+                  <span class="unit-cost">30</span>
+                </div>
                 <p>Durable frontline brawler.</p>
               </button>
               <button class="unit-card" data-unit="neutrophil">
-                <strong>Neutrophil</strong>
-                <span>Cost: 45</span>
+                <div class="unit-card-heading">
+                  <strong>Neutrophil</strong>
+                  <span class="unit-cost">45</span>
+                </div>
                 <p>Fast striker, excels against swarms.</p>
               </button>
               <button class="unit-card" data-unit="tcell">
-                <strong>T Cell</strong>
-                <span>Cost: 60</span>
+                <div class="unit-card-heading">
+                  <strong>T Cell</strong>
+                  <span class="unit-cost">60</span>
+                </div>
                 <p>Ranged unit firing antigen bolts.</p>
               </button>
             </div>
-            <section class="ability-panel">
-              <h3>Field Events</h3>
-              <div class="ability-grid">
-                <button id="slime-button" class="ability-card" type="button">
-                  <div class="ability-heading">
-                    <strong>Slime Flood</strong>
-                    <span class="ability-status">Ready</span>
-                  </div>
-                  <p>Coats viruses in mucus and slows them for a moment.</p>
-                </button>
-                <button id="sneeze-button" class="ability-card" type="button">
-                  <div class="ability-heading">
-                    <strong>Reflex Sneeze</strong>
-                    <span class="ability-status">Ready</span>
-                  </div>
-                  <p>Blasts invaders backward, buying the tissue precious time.</p>
-                </button>
-              </div>
-            </section>
-            <p class="panel-hint">
-              Click a unit, then click the battlefield to deploy near the tissue
-              wall.
-            </p>
+          </div>
+
+          <section class="ability-panel">
+            <h3>Field Events</h3>
+            <div class="ability-grid">
+              <button id="slime-button" class="ability-card" type="button">
+                <div class="ability-heading">
+                  <strong>Slime Flood</strong>
+                  <span class="ability-status">Ready</span>
+                </div>
+                <p>Coats viruses in mucus and slows them for a moment.</p>
+              </button>
+              <button id="sneeze-button" class="ability-card" type="button">
+                <div class="ability-heading">
+                  <strong>Reflex Sneeze</strong>
+                  <span class="ability-status">Ready</span>
+                </div>
+                <p>Blasts invaders backward, buying the tissue precious time.</p>
+              </button>
+            </div>
           </section>
 
-          <div class="battle-column">
-            <section class="metrics-bar" aria-label="Battle metrics">
-              <div class="stat">
-                Cellular Mass:
-                <span id="mass-value">0</span>
-              </div>
-              <div class="stat">
-                Health:
-                <span id="health-value">100%</span>
-              </div>
-              <div class="stat">
-                Infection Meter:
-                <span id="infection-value">0%</span>
-              </div>
-              <div class="stat">
-                Selected Unit:
-                <span id="selected-unit">None</span>
-              </div>
-            </section>
+          <p class="panel-hint">
+            Click a unit, then click the battlefield to deploy near the tissue wall.
+          </p>
+        </section>
+      </section>
 
-            <section class="battlefield-wrapper">
-              <canvas id="battlefield" width="960" height="420"></canvas>
-            </section>
-
-            <section class="log-panel">
-              <h2>Immune Log</h2>
-              <ul id="event-log"></ul>
-            </section>
+      <section id="outcome-panel" class="outcome-panel" data-visible="false" aria-live="polite">
+        <div class="outcome-card">
+          <h2 id="outcome-title">Victory!</h2>
+          <p id="outcome-message">The immune system stabilized the infected tissue.</p>
+          <div class="outcome-actions">
+            <button class="primary" id="retry-button">Replay Mission</button>
+            <button class="ghost" id="level-select-button">Choose Scenario</button>
           </div>
         </div>
       </section>

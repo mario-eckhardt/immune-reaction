@@ -35,7 +35,8 @@ h1 {
 
 .metrics-bar,
 .unit-panel,
-.log-panel {
+.log-panel,
+.ability-panel {
   background: #fff;
   border-radius: 14px;
   padding: 1rem 1.25rem;
@@ -87,14 +88,32 @@ h1 {
 
 .unit-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
+}
+
+.unit-card-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.unit-cost {
+  font-weight: 700;
+  color: #0e1b2c;
+  background: rgba(15, 35, 63, 0.08);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .unit-card {
   background: #f6f8ff;
   border: 2px solid transparent;
-  padding: 0.75rem;
+  padding: 0.65rem;
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
@@ -111,10 +130,6 @@ h1 {
 .unit-card strong {
   display: block;
   font-size: 1.1rem;
-}
-
-.ability-panel {
-  margin-top: 1rem;
 }
 
 .ability-grid {
@@ -206,7 +221,9 @@ h1 {
 }
 
 #game-shell[data-visible="true"] {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .start-panel {
@@ -233,12 +250,6 @@ h1 {
   opacity: 0.7;
 }
 
-.game-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
 .battle-column {
   display: flex;
   flex-direction: column;
@@ -246,17 +257,19 @@ h1 {
   flex: 1 1 auto;
 }
 
-@media (min-width: 960px) {
-  .game-grid {
-    flex-direction: row;
-  }
+.support-panels {
+  display: grid;
+  gap: 1rem;
+}
 
-  .unit-panel {
-    flex: 0 0 360px;
-  }
+.support-panels .panel-hint {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
 
-  .battle-column {
-    flex: 1 1 520px;
+@media (min-width: 720px) {
+  .support-panels {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
 
@@ -278,4 +291,80 @@ h1 {
 .log-panel li {
   font-size: 0.95rem;
   margin-bottom: 0.35rem;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.level-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 10px 22px rgba(10, 15, 40, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.level-card h3 {
+  margin: 0 0 0.5rem;
+}
+
+.level-card p {
+  margin: 0;
+  color: #223553;
+}
+
+.level-card .primary {
+  align-self: flex-start;
+}
+
+.outcome-panel {
+  display: none;
+}
+
+.outcome-panel[data-visible="true"] {
+  display: block;
+}
+
+.outcome-card {
+  background: #05142b;
+  color: #f5fbff;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 40px 80px rgba(5, 20, 43, 0.35);
+  text-align: center;
+}
+
+.outcome-card h2 {
+  margin-top: 0;
+  font-size: 1.8rem;
+}
+
+.outcome-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.ghost {
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  border: 2px solid rgba(245, 251, 255, 0.7);
+  background: transparent;
+  color: #f5fbff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border 0.2s ease, transform 0.2s ease;
+}
+
+.ghost:hover {
+  transform: translateY(-1px);
+  border-color: #ffffff;
 }
