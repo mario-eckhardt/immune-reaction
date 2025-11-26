@@ -18,6 +18,32 @@ const retryButton = document.getElementById("retry-button");
 const levelSelectButton = document.getElementById("level-select-button");
 const slimeStatusLabel = slimeButton?.querySelector(".ability-status") ?? null;
 const sneezeStatusLabel = sneezeButton?.querySelector(".ability-status") ?? null;
+const appHeader = document.querySelector("header");
+const influenzaCard = document.getElementById("influenza-card");
+
+const GameStages = {
+  PREPARING: "pre",
+  PLAYING: "playing",
+  POST: "post",
+};
+
+const INFLUENZA_UNLOCK_KEY = "immune-response::influenzaUnlocked";
+
+function readInfluenzaUnlock() {
+  try {
+    return localStorage.getItem(INFLUENZA_UNLOCK_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function persistInfluenzaUnlock(value) {
+  try {
+    localStorage.setItem(INFLUENZA_UNLOCK_KEY, value ? "true" : "false");
+  } catch {
+    // Ignore storage failures (e.g., privacy mode).
+  }
+}
 
 const immuneCatalog = {
   macrophage: {
@@ -203,6 +229,7 @@ const state = {
     slimeCooldown: 0,
     sneezeCooldown: 0,
   },
+  influenzaUnlocked: readInfluenzaUnlock(),
 };
 
 function getCurrentLevel() {
@@ -216,6 +243,13 @@ function setStartButtonsDisabled(disabled) {
   levelButtons.forEach((button) => {
     button.disabled = disabled;
   });
+}
+
+function syncLevelUnlocks() {
+  if (!influenzaCard) {
+    return;
+  }
+  influenzaCard.hidden = !state.influenzaUnlocked;
 }
 
 function hideOutcomePanel() {
@@ -245,7 +279,9 @@ function handleVictory(level) {
     return;
   }
   state.running = false;
+  setGameStage(GameStages.POST);
   logEvent(level.victoryLog);
+  unlockInfluenzaScenario(level.id);
   setStartButtonsDisabled(false);
   showOutcomePanel("success", level.successTitle, level.successMessage);
   updateAbilityButtons();
@@ -256,6 +292,7 @@ function handleDefeat(level) {
     return;
   }
   state.running = false;
+  setGameStage(GameStages.POST);
   logEvent(level.defeatLog);
   setStartButtonsDisabled(false);
   showOutcomePanel("failure", level.failureTitle, level.failureMessage);
@@ -310,6 +347,7 @@ function startLevel(levelId) {
     return;
   }
   revealGameShell();
+  setGameStage(GameStages.PLAYING);
   resetState(levelId);
 }
 
@@ -385,6 +423,27 @@ function logEvent(message) {
     li.textContent = `[${entry.timestamp}] ${entry.message}`;
     logList.appendChild(li);
   });
+}
+
+function setGameStage(stage) {
+  document.body?.setAttribute("data-game-stage", stage);
+  const showIntro = stage !== GameStages.PLAYING;
+  if (startPanel) {
+    startPanel.hidden = !showIntro;
+  }
+  if (appHeader) {
+    appHeader.hidden = !showIntro;
+  }
+}
+
+function unlockInfluenzaScenario(levelId) {
+  if (levelId !== "rhinovirus" || state.influenzaUnlocked) {
+    return;
+  }
+  state.influenzaUnlocked = true;
+  persistInfluenzaUnlock(true);
+  syncLevelUnlocks();
+  logEvent("Advanced directive unlocked: Influenza Storm now available.");
 }
 
 function updateHUD() {
@@ -746,6 +805,7 @@ retryButton?.addEventListener("click", () => {
 levelSelectButton?.addEventListener("click", () => {
   hideOutcomePanel();
   setStartButtonsDisabled(false);
+  setGameStage(GameStages.PREPARING);
   startPanel?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
@@ -758,6 +818,8 @@ if (sneezeButton) {
 }
 
 selectUnit("macrophage");
+syncLevelUnlocks();
+setGameStage(GameStages.PREPARING);
 updateHUD();
 updateAbilityButtons();
 logEvent("Welcome Commander. Choose a scenario to begin.");
