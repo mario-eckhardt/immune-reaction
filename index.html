@@ -35,21 +35,21 @@
 
       <section id="game-shell" data-visible="false">
         <div class="battle-column">
+          <section class="metrics-bar" aria-label="Battle metrics">
+            <div class="stat">
+              Cellular Mass:
+              <span id="mass-value">0</span>
+            </div>
+            <div class="stat">
+              Health:
+              <span id="health-value">100%</span>
+            </div>
+            <div class="stat">
+              Infection Meter:
+              <span id="infection-value">0%</span>
+            </div>
+          </section>
           <section class="battlefield-wrapper">
-            <section class="metrics-bar" aria-label="Battle metrics">
-              <div class="stat">
-                Cellular Mass:
-                <span id="mass-value">0</span>
-              </div>
-              <div class="stat">
-                Health:
-                <span id="health-value">100%</span>
-              </div>
-              <div class="stat">
-                Infection Meter:
-                <span id="infection-value">0%</span>
-              </div>
-            </section>
             <canvas id="battlefield" width="960" height="420"></canvas>
           </section>
         </div>
