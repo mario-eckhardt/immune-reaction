@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Immune RTS – Runny Nose</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header>
+        <h1>Immune Response Tactics</h1>
+        <p>Deploy immune cells to halt the rhinovirus causing a runny nose.</p>
+      </header>
+
+      <section class="hud">
+        <div class="stat">
+          Cellular Mass:
+          <span id="mass-value">0</span>
+        </div>
+        <div class="stat">
+          Tissue Health:
+          <span id="health-value">100%</span>
+        </div>
+        <div class="stat">
+          Infection Meter:
+          <span id="infection-value">0%</span>
+        </div>
+        <div class="stat">
+          Selected Unit:
+          <span id="selected-unit">None</span>
+        </div>
+        <button id="start-button" class="primary">Start Runny Nose</button>
+      </section>
+
+      <section class="unit-panel">
+        <h2>Immune Units</h2>
+        <div class="unit-grid">
+          <button class="unit-card" data-unit="macrophage">
+            <strong>Macrophage</strong>
+            <span>Cost: 30</span>
+            <p>Durable frontline brawler.</p>
+          </button>
+          <button class="unit-card" data-unit="neutrophil">
+            <strong>Neutrophil</strong>
+            <span>Cost: 45</span>
+            <p>Fast striker, excels against swarms.</p>
+          </button>
+          <button class="unit-card" data-unit="tcell">
+            <strong>T Cell</strong>
+            <span>Cost: 60</span>
+            <p>Ranged unit firing antigen bolts.</p>
+          </button>
+        </div>
+        <p class="panel-hint">
+          Click a unit, then click the battlefield to deploy near the tissue
+          wall.
+        </p>
+      </section>
+
+      <section class="battlefield-wrapper">
+        <canvas id="battlefield" width="960" height="420"></canvas>
+      </section>
+
+      <section class="log-panel">
+        <h2>Immune Log</h2>
+        <ul id="event-log"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="game.js"></script>
+  </body>
+</html>

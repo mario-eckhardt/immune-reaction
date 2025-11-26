@@ -1,0 +1,146 @@
+:root {
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  color: #0e1b2c;
+  background: #edf4ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #f3fbff, #dde7fb 60%);
+}
+
+.app-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+header {
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2.4rem;
+}
+
+.hud,
+.unit-panel,
+.log-panel {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 15px 30px rgba(10, 15, 40, 0.08);
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+
+.stat {
+  font-weight: 600;
+}
+
+.stat span {
+  font-weight: 700;
+  color: #0044c4;
+}
+
+.primary {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #2c6bff, #3bc9ff);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.primary:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(60, 110, 255, 0.3);
+}
+
+.unit-panel h2,
+.log-panel h2 {
+  margin-top: 0;
+}
+
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.unit-card {
+  background: #f6f8ff;
+  border: 2px solid transparent;
+  padding: 0.75rem;
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border 0.2s ease, transform 0.2s ease;
+}
+
+.unit-card[selected="true"] {
+  border-color: #5a8dff;
+  transform: translateY(-2px);
+  background: #eef3ff;
+}
+
+.unit-card strong {
+  display: block;
+  font-size: 1.1rem;
+}
+
+.panel-hint {
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  color: #4b5d7a;
+}
+
+.battlefield-wrapper {
+  background: #03172f;
+  padding: 0.75rem;
+  border-radius: 16px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35);
+}
+
+#battlefield {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #0e2745 0%, #153858 100%);
+}
+
+.log-panel ul {
+  list-style: none;
+  padding-left: 1rem;
+  max-height: 160px;
+  overflow: auto;
+  margin: 0;
+}
+
+.log-panel li {
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
