@@ -3,7 +3,6 @@ const ctx = canvas.getContext("2d");
 
 const massValue = document.getElementById("mass-value");
 const healthValue = document.getElementById("health-value");
-const infectionValue = document.getElementById("infection-value");
 const startPanel = document.getElementById("start-panel");
 const gameShell = document.getElementById("game-shell");
 const unitPanel = document.querySelector(".unit-grid");
@@ -13,9 +12,7 @@ const sneezeButton = document.getElementById("sneeze-button");
 const levelButtons = document.querySelectorAll("[data-level-trigger]");
 const outcomePanel = document.getElementById("outcome-panel");
 const outcomeTitle = document.getElementById("outcome-title");
-const outcomeMessage = document.getElementById("outcome-message");
-const retryButton = document.getElementById("retry-button");
-const levelSelectButton = document.getElementById("level-select-button");
+const outcomeActionButton = document.getElementById("outcome-action-button");
 const slimeStatusLabel = slimeButton?.querySelector(".ability-status") ?? null;
 const sneezeStatusLabel = sneezeButton?.querySelector(".ability-status") ?? null;
 const appHeader = document.querySelector("header");
@@ -25,6 +22,11 @@ const GameStages = {
   PREPARING: "pre",
   PLAYING: "playing",
   POST: "post",
+};
+
+const OutcomeAction = {
+  NEXT: "next",
+  RESTART: "restart",
 };
 
 const INFLUENZA_UNLOCK_KEY = "immune-response::influenzaUnlocked";
@@ -181,9 +183,7 @@ const levelConfigs = {
     failureTitle: "Runny Nose Overrun",
     failureMessage: "Viruses broke through the nasal defenses. Recalibrate and retry.",
     startMass: 50,
-    startInfection: 5,
     passiveGain: 5,
-    infectionRate: 0.25,
     waves: rhinovirusWaves,
   },
   influenza: {
@@ -197,12 +197,27 @@ const levelConfigs = {
     failureTitle: "Influenza Storm Lost",
     failureMessage: "The surge overwhelmed our line. Regroup and strike again.",
     startMass: 70,
-    startInfection: 12,
     passiveGain: 6,
-    infectionRate: 0.32,
     waves: influenzaWaves,
   },
 };
+
+const levelOrder = Object.keys(levelConfigs);
+
+function getNextLevelId(currentLevelId) {
+  if (!levelOrder.length) {
+    return null;
+  }
+  const currentIndex = levelOrder.indexOf(currentLevelId);
+  if (currentIndex === -1) {
+    return levelOrder[0];
+  }
+  if (levelOrder.length === 1) {
+    return levelOrder[0];
+  }
+  const nextIndex = (currentIndex + 1) % levelOrder.length;
+  return levelOrder[nextIndex];
+}
 
 const DEPLOYMENT_MIN_X = 30;
 const DEPLOYMENT_MAX_RATIO = 0.45;
@@ -216,8 +231,6 @@ const state = {
   cellularMass: 50,
   passiveGain: 5,
   tissueHealth: 100,
-  infection: 0,
-  infectionRate: 0.25,
   waveIndex: 0,
   waveTimer: 0,
   spawnTimer: 0,
@@ -258,10 +271,14 @@ function hideOutcomePanel() {
   }
   outcomePanel.dataset.visible = "false";
   delete outcomePanel.dataset.mode;
+  if (outcomeActionButton) {
+    delete outcomeActionButton.dataset.action;
+    delete outcomeActionButton.dataset.targetLevel;
+  }
 }
 
-function showOutcomePanel(mode, title, message) {
-  if (!outcomePanel) {
+function showOutcomePanel({ mode, title, actionLabel, actionType, actionTarget }) {
+  if (!outcomePanel || !outcomeActionButton) {
     return;
   }
   outcomePanel.dataset.visible = "true";
@@ -269,8 +286,16 @@ function showOutcomePanel(mode, title, message) {
   if (outcomeTitle) {
     outcomeTitle.textContent = title;
   }
-  if (outcomeMessage) {
-    outcomeMessage.textContent = message;
+  outcomeActionButton.textContent = actionLabel;
+  if (actionType) {
+    outcomeActionButton.dataset.action = actionType;
+  } else {
+    delete outcomeActionButton.dataset.action;
+  }
+  if (actionTarget) {
+    outcomeActionButton.dataset.targetLevel = actionTarget;
+  } else {
+    delete outcomeActionButton.dataset.targetLevel;
   }
 }
 
@@ -283,7 +308,14 @@ function handleVictory(level) {
   logEvent(level.victoryLog);
   unlockInfluenzaScenario(level.id);
   setStartButtonsDisabled(false);
-  showOutcomePanel("success", level.successTitle, level.successMessage);
+  const nextLevelId = getNextLevelId(level.id);
+  showOutcomePanel({
+    mode: "success",
+    title: level.successTitle ?? "Mission Success",
+    actionLabel: "Start Next Level",
+    actionType: OutcomeAction.NEXT,
+    actionTarget: nextLevelId,
+  });
   updateAbilityButtons();
 }
 
@@ -295,7 +327,13 @@ function handleDefeat(level) {
   setGameStage(GameStages.POST);
   logEvent(level.defeatLog);
   setStartButtonsDisabled(false);
-  showOutcomePanel("failure", level.failureTitle, level.failureMessage);
+  showOutcomePanel({
+    mode: "failure",
+    title: "Game Over",
+    actionLabel: "Restart Mission",
+    actionType: OutcomeAction.RESTART,
+    actionTarget: level.id,
+  });
   updateAbilityButtons();
 }
 
@@ -312,9 +350,7 @@ function resetState(levelId) {
   state.projectiles = [];
   state.cellularMass = level.startMass ?? 50;
   state.tissueHealth = 100;
-  state.infection = level.startInfection ?? 5;
   state.passiveGain = level.passiveGain ?? 5;
-  state.infectionRate = level.infectionRate ?? 0.25;
   state.waveIndex = 0;
   state.waveTimer = 0;
   state.spawnTimer = 0;
@@ -427,7 +463,7 @@ function logEvent(message) {
 
 function setGameStage(stage) {
   document.body?.setAttribute("data-game-stage", stage);
-  const showIntro = stage !== GameStages.PLAYING;
+  const showIntro = stage === GameStages.PREPARING;
   if (startPanel) {
     startPanel.hidden = !showIntro;
   }
@@ -449,7 +485,6 @@ function unlockInfluenzaScenario(levelId) {
 function updateHUD() {
   massValue.textContent = Math.floor(state.cellularMass);
   healthValue.textContent = `${Math.max(state.tissueHealth, 0).toFixed(0)}%`;
-  infectionValue.textContent = `${Math.min(state.infection, 100).toFixed(0)}%`;
 }
 
 function formatAbilityTimer(value) {
@@ -634,7 +669,6 @@ function handleCombat(delta) {
     virus.x -= virus.speed * slimeSlowFactor * delta;
     if (virus.x <= 35) {
       state.tissueHealth -= virus.damage * 0.8;
-      state.infection += virus.damage * 0.5;
       virus.hp = 0;
     }
   });
@@ -659,9 +693,7 @@ function updateLevel(delta) {
     return;
   }
   state.cellularMass += state.passiveGain * delta;
-  state.infection += state.virusUnits.length * state.infectionRate * delta;
   state.tissueHealth = Math.min(Math.max(state.tissueHealth, 0), 100);
-  state.infection = Math.min(Math.max(state.infection, 0), 100);
 
   const wave = level.waves?.[state.waveIndex];
   if (wave) {
@@ -794,19 +826,18 @@ levelButtons.forEach((button) => {
   });
 });
 
-retryButton?.addEventListener("click", () => {
-  if (state.currentLevelId) {
-    startLevel(state.currentLevelId);
-  } else {
-    hideOutcomePanel();
+outcomeActionButton?.addEventListener("click", () => {
+  const action = outcomeActionButton.dataset.action;
+  const targetLevel = outcomeActionButton.dataset.targetLevel;
+  if (action === OutcomeAction.RESTART) {
+    if (targetLevel) {
+      startLevel(targetLevel);
+    } else if (state.currentLevelId) {
+      startLevel(state.currentLevelId);
+    }
+  } else if (action === OutcomeAction.NEXT && targetLevel) {
+    startLevel(targetLevel);
   }
-});
-
-levelSelectButton?.addEventListener("click", () => {
-  hideOutcomePanel();
-  setStartButtonsDisabled(false);
-  setGameStage(GameStages.PREPARING);
-  startPanel?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 if (slimeButton) {

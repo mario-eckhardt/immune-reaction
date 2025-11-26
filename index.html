@@ -44,10 +44,6 @@
               Health:
               <span id="health-value">100%</span>
             </div>
-            <div class="stat">
-              Infection Meter:
-              <span id="infection-value">0%</span>
-            </div>
           </section>
           <section class="battlefield-wrapper">
             <canvas id="battlefield" width="960" height="420"></canvas>
@@ -111,14 +107,15 @@
         </section>
       </section>
 
-      <section id="outcome-panel" class="outcome-panel" data-visible="false" aria-live="polite">
+      <section
+        id="outcome-panel"
+        class="outcome-panel"
+        data-visible="false"
+        aria-live="polite"
+      >
         <div class="outcome-card">
           <h2 id="outcome-title">Victory!</h2>
-          <p id="outcome-message">The immune system stabilized the infected tissue.</p>
-          <div class="outcome-actions">
-            <button class="primary" id="retry-button">Replay Mission</button>
-            <button class="ghost" id="level-select-button">Choose Scenario</button>
-          </div>
+          <button class="primary" id="outcome-action-button">Start Next Level</button>
         </div>
       </section>
     </main>

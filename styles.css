@@ -20,6 +20,11 @@ body[data-game-stage="playing"] #start-panel {
   display: none;
 }
 
+body[data-game-stage="post"] header,
+body[data-game-stage="post"] #start-panel {
+  display: none;
+}
+
 .app-shell {
   max-width: 1100px;
   margin: 0 auto;
@@ -410,27 +415,6 @@ h1 {
   font-size: 1.8rem;
 }
 
-.outcome-actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 1rem;
-}
-
-.ghost {
-  padding: 0.75rem 1.25rem;
-  border-radius: 999px;
-  border: 2px solid rgba(245, 251, 255, 0.7);
-  background: transparent;
-  color: #f5fbff;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border 0.2s ease, transform 0.2s ease;
-}
-
-.ghost:hover {
-  transform: translateY(-1px);
-  border-color: #ffffff;
+.outcome-card button {
+  margin-top: 1.25rem;
 }
