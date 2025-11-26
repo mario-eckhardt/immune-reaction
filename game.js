@@ -6,6 +6,8 @@ const healthValue = document.getElementById("health-value");
 const infectionValue = document.getElementById("infection-value");
 const selectedUnitLabel = document.getElementById("selected-unit");
 const startButton = document.getElementById("start-button");
+const startPanel = document.getElementById("start-panel");
+const gameShell = document.getElementById("game-shell");
 const unitPanel = document.querySelector(".unit-grid");
 const logList = document.getElementById("event-log");
 const slimeButton = document.getElementById("slime-button");
@@ -144,6 +146,13 @@ function resetState() {
   logEvent("Scenario online: Runny Nose infiltration detected.");
   startButton.disabled = true;
   updateAbilityButtons();
+}
+
+function revealGameShell() {
+  if (gameShell && gameShell.dataset.visible !== "true") {
+    gameShell.dataset.visible = "true";
+  }
+  startPanel?.setAttribute("data-armed", "true");
 }
 
 function selectUnit(unitId) {
@@ -549,6 +558,7 @@ unitPanel.addEventListener("click", (event) => {
 
 startButton.addEventListener("click", () => {
   if (!state.running) {
+    revealGameShell();
     resetState();
   }
 });
