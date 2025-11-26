@@ -6,7 +6,7 @@
     <title>Immune Response</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body data-game-stage="pre">
     <main class="app-shell">
       <header>
         <h1>Immune Response</h1>
@@ -23,7 +23,7 @@
             </div>
             <button class="primary" data-level-trigger="rhinovirus">Start Runny Nose</button>
           </article>
-          <article class="level-card">
+          <article class="level-card" id="influenza-card" hidden>
             <div>
               <h3>Influenza Storm</h3>
               <p>Weather a ferocious influenza strain pushing deeper into lung tissue.</p>
@@ -35,28 +35,22 @@
 
       <section id="game-shell" data-visible="false">
         <div class="battle-column">
-          <section class="metrics-bar" aria-label="Battle metrics">
-            <div class="stat">
-              Cellular Mass:
-              <span id="mass-value">0</span>
-            </div>
-            <div class="stat">
-              Health:
-              <span id="health-value">100%</span>
-            </div>
-            <div class="stat">
-              Infection Meter:
-              <span id="infection-value">0%</span>
-            </div>
-          </section>
-
           <section class="battlefield-wrapper">
             <canvas id="battlefield" width="960" height="420"></canvas>
-          </section>
-
-          <section class="log-panel">
-            <h2>Immune Log</h2>
-            <ul id="event-log"></ul>
+            <section class="metrics-bar" aria-label="Battle metrics">
+              <div class="stat">
+                Cellular Mass:
+                <span id="mass-value">0</span>
+              </div>
+              <div class="stat">
+                Health:
+                <span id="health-value">100%</span>
+              </div>
+              <div class="stat">
+                Infection Meter:
+                <span id="infection-value">0%</span>
+              </div>
+            </section>
           </section>
         </div>
 
@@ -111,6 +105,11 @@
           <p class="panel-hint">
             Click a unit, then click the battlefield to deploy near the tissue wall.
           </p>
+        </section>
+
+        <section class="log-panel" aria-live="polite">
+          <h2>Immune Log</h2>
+          <ul id="event-log"></ul>
         </section>
       </section>
 
