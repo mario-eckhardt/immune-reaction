@@ -219,22 +219,34 @@ function formatAbilityTimer(value) {
   return value <= 0 ? "Ready" : `${value.toFixed(1)}s`;
 }
 
+function formatSeconds(value) {
+  return `${Math.max(0, value).toFixed(1)}s`;
+}
+
 function updateAbilityButtons() {
   if (slimeButton) {
     const cooldown = state.abilityStatus.slimeCooldown;
-    const isActive = state.abilityStatus.slimeActive > 0;
-    const ready = state.running && cooldown <= 0 && !isActive;
+    const activeTime = state.abilityStatus.slimeActive;
+    const ready = state.running && cooldown <= 0 && activeTime <= 0;
     slimeButton.disabled = !ready;
     if (slimeStatusLabel) {
       if (!state.running) {
         slimeStatusLabel.textContent = "Awaiting start";
-      } else if (isActive) {
-        slimeStatusLabel.textContent = "Active";
+      } else if (activeTime > 0) {
+        slimeStatusLabel.textContent = `Active (${formatSeconds(activeTime)})`;
       } else {
         slimeStatusLabel.textContent = formatAbilityTimer(cooldown);
       }
     }
-    slimeButton.classList.toggle("ability-active", isActive);
+    const slimeProgress =
+      state.running && cooldown > 0
+        ? Math.min(cooldown / fieldAbilities.slime.cooldown, 1)
+        : 0;
+    slimeButton.style.setProperty(
+      "--cooldown-progress",
+      slimeProgress.toFixed(3)
+    );
+    slimeButton.classList.toggle("ability-active", activeTime > 0);
   }
 
   if (sneezeButton) {
@@ -248,6 +260,14 @@ function updateAbilityButtons() {
         sneezeStatusLabel.textContent = formatAbilityTimer(cooldown);
       }
     }
+    const sneezeProgress =
+      state.running && cooldown > 0
+        ? Math.min(cooldown / fieldAbilities.sneeze.cooldown, 1)
+        : 0;
+    sneezeButton.style.setProperty(
+      "--cooldown-progress",
+      sneezeProgress.toFixed(3)
+    );
   }
 }
 
@@ -257,6 +277,24 @@ function ensureScenarioRunning() {
   }
   logEvent("Start the level to trigger field events.");
   return false;
+}
+
+function tickAbilityTimers(elapsedSeconds) {
+  if (!elapsedSeconds || elapsedSeconds <= 0) {
+    return;
+  }
+  state.abilityStatus.slimeCooldown = Math.max(
+    0,
+    state.abilityStatus.slimeCooldown - elapsedSeconds
+  );
+  state.abilityStatus.sneezeCooldown = Math.max(
+    0,
+    state.abilityStatus.sneezeCooldown - elapsedSeconds
+  );
+  state.abilityStatus.slimeActive = Math.max(
+    0,
+    state.abilityStatus.slimeActive - elapsedSeconds
+  );
 }
 
 function activateSlime() {
@@ -383,18 +421,6 @@ function updateLevel(delta) {
   state.infection += state.virusUnits.length * state.infectionRate * delta;
   state.tissueHealth = Math.min(Math.max(state.tissueHealth, 0), 100);
   state.infection = Math.min(Math.max(state.infection, 0), 100);
-  state.abilityStatus.slimeCooldown = Math.max(
-    0,
-    state.abilityStatus.slimeCooldown - delta
-  );
-  state.abilityStatus.sneezeCooldown = Math.max(
-    0,
-    state.abilityStatus.sneezeCooldown - delta
-  );
-  state.abilityStatus.slimeActive = Math.max(
-    0,
-    state.abilityStatus.slimeActive - delta
-  );
 
   const wave = waves[state.waveIndex];
   if (wave) {
@@ -492,9 +518,11 @@ function gameLoop(timestamp) {
   if (!state.lastTimestamp) {
     state.lastTimestamp = timestamp;
   }
-  const delta = Math.min((timestamp - state.lastTimestamp) / 1000, 0.05);
+  const elapsed = Math.max((timestamp - state.lastTimestamp) / 1000, 0);
+  const delta = Math.min(elapsed, 0.05);
   state.lastTimestamp = timestamp;
 
+  tickAbilityTimers(elapsed);
   handleCombat(delta);
   cleanupUnits();
   updateLevel(delta);
